@@ -62,3 +62,4 @@ backend/tessdata/*.traineddata
 
 # Supabase connection for deploy scripts (not loaded by Next.js)
 .env.supabase
+.vercel
