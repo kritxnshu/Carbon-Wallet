@@ -32,6 +32,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -44,9 +46,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -61,7 +67,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import app.carbonwallet.core.net.Remote
 import app.carbonwallet.core.ui.theme.Cw
 
-val CardShape = RoundedCornerShape(3.dp)
+val CardShape = RoundedCornerShape(14.dp)
 
 /** Traffic-light tone. Always shown with an icon and a word, never colour alone. */
 enum class Tone(val fg: Color, val bg: Color, val border: Color) {
@@ -111,10 +117,10 @@ fun CwCard(
     )
 }
 
-/** Small uppercase label above a section, as on the website's cards. */
+/** Small label above a section. */
 @Composable
 fun Eyebrow(text: String, modifier: Modifier = Modifier, color: Color = Cw.inkMuted) {
-    Text(text.uppercase(), modifier = modifier, style = MaterialTheme.typography.labelSmall, color = color, letterSpacing = 1.sp)
+    Text(text, modifier = modifier, style = MaterialTheme.typography.labelMedium, color = color)
 }
 
 @Composable
@@ -132,8 +138,8 @@ fun SectionHeader(title: String, hint: String? = null, modifier: Modifier = Modi
 fun StatusPill(tone: Tone, text: String, modifier: Modifier = Modifier, large: Boolean = false) {
     Row(
         modifier
-            .background(tone.bg, RoundedCornerShape(2.dp))
-            .border(1.dp, tone.border, RoundedCornerShape(2.dp))
+            .background(tone.bg, RoundedCornerShape(8.dp))
+            .border(1.dp, tone.border, RoundedCornerShape(8.dp))
             .padding(horizontal = if (large) 12.dp else 8.dp, vertical = if (large) 8.dp else 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -147,7 +153,7 @@ fun StatusPill(tone: Tone, text: String, modifier: Modifier = Modifier, large: B
 fun Tag(text: String, modifier: Modifier = Modifier, color: Color = Cw.inkMuted, background: Color = Cw.subtle) {
     Text(
         text,
-        modifier = modifier.background(background, RoundedCornerShape(2.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+        modifier = modifier.background(background, RoundedCornerShape(8.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
         style = MaterialTheme.typography.labelSmall,
         color = color,
         maxLines = 1,
@@ -214,7 +220,7 @@ fun ListRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (icon != null) {
-            Box(Modifier.size(34.dp).background(iconBg, RoundedCornerShape(3.dp)), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(34.dp).background(iconBg, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
                 Icon(icon, null, tint = iconTint, modifier = Modifier.size(18.dp))
             }
             Spacer(Modifier.width(12.dp))
@@ -246,7 +252,7 @@ fun PrimaryButton(
         onClick = onClick,
         enabled = enabled && !busy,
         modifier = modifier.heightIn(min = 46.dp),
-        shape = RoundedCornerShape(3.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(containerColor = color, contentColor = Cw.card, disabledContainerColor = color.copy(alpha = 0.45f), disabledContentColor = Cw.card),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp),
     ) {
@@ -267,7 +273,7 @@ fun SecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.heightIn(min = 44.dp),
-        shape = RoundedCornerShape(3.dp),
+        shape = RoundedCornerShape(12.dp),
         border = BorderStroke(1.dp, if (enabled) color.copy(alpha = 0.6f) else Cw.border),
         colors = ButtonDefaults.outlinedButtonColors(contentColor = color),
         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
@@ -318,7 +324,7 @@ fun CwTextField(
         supportingText = supporting?.let { { Text(it) } },
         visualTransformation = visual ?: if (password) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        shape = RoundedCornerShape(3.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = Cw.ink,
             unfocusedBorderColor = Cw.border,
@@ -335,7 +341,7 @@ fun CwTextField(
 fun Skeleton(modifier: Modifier = Modifier, height: Dp = 16.dp) {
     val transition = rememberInfiniteTransition(label = "skeleton")
     val alpha by transition.animateFloat(0.45f, 0.9f, infiniteRepeatable(tween(800), RepeatMode.Reverse), label = "alpha")
-    Box(modifier.fillMaxWidth().height(height).alpha(alpha).background(Cw.subtle, RoundedCornerShape(2.dp)))
+    Box(modifier.fillMaxWidth().height(height).alpha(alpha).background(Cw.subtle, RoundedCornerShape(8.dp)))
 }
 
 @Composable
@@ -420,3 +426,34 @@ fun <T> RemoteList(
 
 @Composable
 private fun offlineText(error: String) = t("Showing saved data. $error", "सहेजा हुआ डेटा दिख रहा है। $error")
+
+/** A labelled dropdown: the field shows the current choice; tapping it lists the options. */
+@Composable
+fun <T> CwDropdown(label: String, options: List<Pair<T, String>>, selected: T, onSelect: (T) -> Unit, modifier: Modifier = Modifier) {
+    var open by remember { mutableStateOf(false) }
+    Column(modifier.fillMaxWidth()) {
+        Text(label, style = MaterialTheme.typography.labelLarge, color = Cw.inkMuted)
+        Spacer(Modifier.height(4.dp))
+        Box {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+                    .clip(CardShape)
+                    .background(Cw.card)
+                    .border(1.dp, Cw.border, CardShape)
+                    .clickable { open = true }
+                    .padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(options.firstOrNull { it.first == selected }?.second.orEmpty(), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                Icon(Lucide.ChevronDown, null, tint = Cw.inkMuted, modifier = Modifier.size(18.dp))
+            }
+            DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+                options.forEach { (value, text) ->
+                    DropdownMenuItem(text = { Text(text) }, onClick = { onSelect(value); open = false })
+                }
+            }
+        }
+    }
+}

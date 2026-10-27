@@ -78,4 +78,5 @@ object Lucide {
     val Type: ImageVector by lazy { lucide("Type", "M4 7L4 4L20 4L20 7", "M9 20L15 20", "M12 4L12 20") }
     val Flame: ImageVector by lazy { lucide("Flame", "M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z") }
     val IdCard: ImageVector by lazy { lucide("IdCard", "M16 10h2", "M16 14h2", "M6.17 15a3 3 0 0 1 5.66 0", "M7 11a2 2 0 1 0 4 0a2 2 0 1 0 -4 0", "M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z") }
+    val ChevronDown: ImageVector by lazy { lucide("ChevronDown", "m6 9 6 6 6-6") }
 }

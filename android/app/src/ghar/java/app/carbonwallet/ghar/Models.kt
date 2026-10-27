@@ -260,7 +260,14 @@ data class Vehicle(
     val monthlyKm: Double? = null,
     val source: String = "OWNER",
     val registrationNo: String? = null,
+    val gpsDeviceId: String? = null,
+    val pucNumber: String? = null,
+    val pucValidUntil: String? = null,
+    val pucSource: String? = null,
 )
+
+@Serializable
+data class PucSaved(val vehicle: Vehicle? = null)
 
 @Serializable
 data class RemovalsResponse(val requests: List<Removal> = emptyList())

@@ -37,6 +37,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -46,6 +47,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -53,6 +55,10 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.activity.compose.LocalActivity
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 import app.carbonwallet.core.FlavorSpec
 import app.carbonwallet.core.model.NotificationsPage
 import app.carbonwallet.core.net.AuthState
@@ -67,21 +73,65 @@ import app.carbonwallet.core.ui.UiPrefs
 import app.carbonwallet.core.ui.pick
 import app.carbonwallet.core.ui.t
 import app.carbonwallet.core.ui.theme.Cw
+import kotlinx.coroutines.delay
 
 @Composable
 fun CwApp(flavor: FlavorSpec) {
     val auth by Session.state.collectAsState()
-    when (val state = auth) {
-        AuthState.Checking -> Checking()
-        AuthState.SignedOut -> LoginScreen(flavor)
-        is AuthState.SignedIn -> SignedInShell(flavor, state)
+    // a short green welcome on every cold start; the session check runs underneath it
+    var welcome by rememberSaveable { mutableStateOf(true) }
+    LaunchedEffect(Unit) {
+        delay(1500)
+        welcome = false
+    }
+    AnimatedContent(targetState = welcome, transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) }, label = "welcome") { showing ->
+        if (showing) {
+            Welcome(flavor)
+        } else {
+            when (val state = auth) {
+                AuthState.Checking -> Checking()
+                AuthState.SignedOut -> LoginScreen(flavor)
+                is AuthState.SignedIn -> SignedInShell(flavor, state)
+            }
+        }
+    }
+}
+
+private val WelcomeGreen = Brush.verticalGradient(listOf(Cw.govBlue, Cw.govDeep))
+
+/** White status-bar icons while a green screen shows; the light screens get dark icons back. */
+@Composable
+private fun WhiteStatusIcons() {
+    val activity = LocalActivity.current
+    val view = LocalView.current
+    DisposableEffect(activity) {
+        val controller = activity?.window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.isAppearanceLightStatusBars = false
+        onDispose { controller?.isAppearanceLightStatusBars = true }
+    }
+}
+
+/** The green welcome: the app mark, the name and which app this is, for a moment while the app gets ready. */
+@Composable
+private fun Welcome(flavor: FlavorSpec) {
+    WhiteStatusIcons()
+    Box(Modifier.fillMaxSize().background(WelcomeGreen), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Seal(96.dp)
+            Spacer(Modifier.height(18.dp))
+            Text("Carbon Wallet", color = Color.White, style = MaterialTheme.typography.headlineMedium)
+            Text(t(flavor.serviceEn, flavor.serviceHi), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.height(28.dp))
+            CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(22.dp))
+        }
     }
 }
 
 @Composable
 private fun Checking() {
     LaunchedEffect(Unit) { runCatching { Session.refreshMe() } }
-    Box(Modifier.fillMaxSize().background(Cw.govNavy), contentAlignment = Alignment.Center) {
+    WhiteStatusIcons()
+    Box(Modifier.fillMaxSize().background(WelcomeGreen), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Seal(96.dp)
             Spacer(Modifier.height(20.dp))
@@ -129,7 +179,7 @@ private fun SignedInShell(flavor: FlavorSpec, state: AuthState.SignedIn) {
             bottomBar = { if (stack.isEmpty()) BottomBar(flavor, tab) { tab = it } },
             snackbarHost = {
                 SnackbarHost(snackbar) { data ->
-                    Snackbar(data, shape = RoundedCornerShape(3.dp), containerColor = Cw.ink, contentColor = Cw.card, actionColor = Cw.saffron)
+                    Snackbar(data, shape = RoundedCornerShape(12.dp), containerColor = Cw.ink, contentColor = Cw.card, actionColor = Cw.saffron)
                 }
             },
         ) { padding ->
@@ -194,11 +244,10 @@ private fun BottomBar(flavor: FlavorSpec, selected: Int, onSelect: (Int) -> Unit
                         },
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    // the active tab gets a saffron rule on top, like the portal menu
-                    Box(Modifier.fillMaxWidth(0.6f).height(3.dp).background(if (on) Cw.saffron else Color.Transparent))
-                    Spacer(Modifier.height(6.dp))
+                    // the active tab sits in a soft green pill
+                    Spacer(Modifier.height(8.dp))
                     Box(
-                        Modifier.background(if (on) Cw.govSky else Color.Transparent, RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 2.dp),
+                        Modifier.background(if (on) Cw.govSky else Color.Transparent, RoundedCornerShape(50)).padding(horizontal = 16.dp, vertical = 3.dp),
                     ) {
                         Icon(tab.icon, null, tint = if (on) Cw.govNavy else Cw.inkMuted, modifier = Modifier.size(19.dp))
                     }

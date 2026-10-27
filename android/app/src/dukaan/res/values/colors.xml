@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="brand">#B4532F</color>
+    <!-- the app's green: launcher icon background and the system splash -->
+    <color name="brand">#0E6B4A</color>
 </resources>

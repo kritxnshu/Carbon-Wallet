@@ -39,15 +39,15 @@ import java.time.ZoneOffset
 /** A date shown like "30 Sep 2026" that opens a calendar. [value] is "yyyy-MM-dd" or blank. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DateField(label: String, value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, note: String? = null) {
+fun DateField(label: String, value: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, note: String? = null, allowFuture: Boolean = false) {
     var open by remember { mutableStateOf(false) }
     Column(modifier) {
         Row(
             Modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
-                .background(Color.White, RoundedCornerShape(3.dp))
-                .border(1.dp, Cw.border, RoundedCornerShape(3.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
+                .border(1.dp, Cw.border, RoundedCornerShape(12.dp))
                 .clickable { open = true }
                 .padding(horizontal = 14.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -63,7 +63,8 @@ fun DateField(label: String, value: String, onChange: (String) -> Unit, modifier
     }
     if (open) {
         val initial = runCatching { LocalDate.parse(value).atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli() }.getOrNull()
-        val state = rememberDatePickerState(initialSelectedDateMillis = initial, selectableDates = NotAfterToday)
+        // expiry dates (a PUC "valid until") lie ahead; bills and purchases never do
+        val state = rememberDatePickerState(initialSelectedDateMillis = initial, selectableDates = if (allowFuture) DatePickerDefaults.AllDates else NotAfterToday)
         DatePickerDialog(
             onDismissRequest = { open = false },
             confirmButton = {
@@ -110,8 +111,8 @@ fun <T> ChoiceChips(options: List<Pair<String, T>>, selected: T?, onSelect: (T) 
             Text(
                 label,
                 modifier = Modifier
-                    .background(if (on) Cw.govNavy else Cw.card, RoundedCornerShape(3.dp))
-                    .border(1.dp, if (on) Cw.govNavy else Cw.border, RoundedCornerShape(3.dp))
+                    .background(if (on) Cw.govNavy else Cw.card, RoundedCornerShape(12.dp))
+                    .border(1.dp, if (on) Cw.govNavy else Cw.border, RoundedCornerShape(12.dp))
                     .clickable { onSelect(value) }
                     .padding(horizontal = 14.dp, vertical = 10.dp),
                 color = if (on) Color.White else Cw.ink,

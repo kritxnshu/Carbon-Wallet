@@ -52,7 +52,6 @@ import app.carbonwallet.core.ui.PrimaryButton
 import app.carbonwallet.core.ui.Seal
 import app.carbonwallet.core.ui.SecondaryButton
 import app.carbonwallet.core.ui.Tone
-import app.carbonwallet.core.ui.Tricolour
 import app.carbonwallet.core.ui.UtilityBar
 import app.carbonwallet.core.ui.t
 import app.carbonwallet.core.ui.theme.Cw
@@ -94,32 +93,31 @@ fun LoginScreen(flavor: FlavorSpec) {
             .verticalScroll(rememberScrollState())
             .imePadding(),
     ) {
-        // portal masthead, full width
-        Column(Modifier.fillMaxWidth().background(Cw.govDeep).windowInsetsPadding(WindowInsets.statusBars)) {
-            Tricolour()
+        // a light welcome: text size and language at the top, then the app mark and name
+        Column(Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.statusBars)) {
             UtilityBar()
             Column(
-                Modifier.fillMaxWidth().background(Cw.govNavy).padding(top = 18.dp, bottom = 16.dp, start = 20.dp, end = 20.dp),
+                Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp, start = 20.dp, end = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Seal(76.dp)
-                Spacer(Modifier.height(10.dp))
-                Text("कार्बन वॉलेट", color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontFamily = Fonts.plexDeva))
-                Text("Carbon Wallet", color = Color.White, style = MaterialTheme.typography.headlineSmall.copy(fontFamily = Fonts.newsreader))
+                Seal(64.dp)
+                Spacer(Modifier.height(12.dp))
+                Text("Carbon Wallet", color = Cw.ink, style = MaterialTheme.typography.headlineMedium)
+                Text("कार्बन वॉलेट", color = Cw.inkMuted, style = MaterialTheme.typography.bodyMedium.copy(fontFamily = Fonts.plexDeva))
                 Spacer(Modifier.height(6.dp))
                 Text(
                     t(flavor.serviceEn, flavor.serviceHi),
-                    color = Color.White.copy(alpha = 0.8f),
-                    style = MaterialTheme.typography.bodyMedium,
+                    color = Cw.govNavy,
+                    style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center,
+                    modifier = Modifier.background(Cw.govSky, RoundedCornerShape(50)).padding(horizontal = 12.dp, vertical = 4.dp),
                 )
             }
-            Box(Modifier.fillMaxWidth().height(4.dp).background(Cw.saffron))
         }
 
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Eyebrow(t("Sign in", "साइन इन"))
             Text(t("Welcome back", "फिर से स्वागत है"), style = MaterialTheme.typography.headlineSmall)
+            Text(t("Sign in to see this month's carbon.", "इस महीने का कार्बन देखने के लिए साइन इन करें।"), style = MaterialTheme.typography.bodyMedium, color = Cw.inkMuted)
 
             Session.notice?.let { Banner(Tone.WARN, it) }
             error?.let { Banner(Tone.BAD, it) }
@@ -169,8 +167,8 @@ fun LoginScreen(flavor: FlavorSpec) {
                     Row(
                         Modifier
                             .fillMaxWidth()
-                            .background(Cw.card, RoundedCornerShape(3.dp))
-                            .border(1.dp, Cw.border, RoundedCornerShape(3.dp))
+                            .background(Cw.card, RoundedCornerShape(12.dp))
+                            .border(1.dp, Cw.border, RoundedCornerShape(12.dp))
                             .clickable {
                                 email = demo.email
                                 password = demo.password
@@ -193,8 +191,8 @@ fun LoginScreen(flavor: FlavorSpec) {
             Spacer(Modifier.height(8.dp))
             Text(
                 t(
-                    "A citizen carbon service. Not a government website or app.",
-                    "नागरिकों के लिए कार्बन सेवा। यह सरकारी वेबसाइट या ऐप नहीं है।",
+                    "Carbon Wallet is an independent service, not a government website or app.",
+                    "कार्बन वॉलेट एक स्वतंत्र सेवा है, सरकारी वेबसाइट या ऐप नहीं।",
                 ),
                 style = MaterialTheme.typography.bodySmall,
                 color = Cw.inkMuted,

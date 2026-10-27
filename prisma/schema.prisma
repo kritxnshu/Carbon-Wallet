@@ -211,6 +211,12 @@ model Vehicle {
   vin            String? // chassis number
   registrationNo String?          @map("registration_no") // often given by the RTO after the sale
   purchasedOn    DateTime?        @map("purchased_on")
+  gpsDeviceId    String?          @map("gps_device_id") // GPS tracker or connected-car unit (often its IMEI), optional
+  // Pollution Under Control certificate: issued after the sale, so the family adds it later (DigiLocker or typed)
+  pucNumber      String?          @map("puc_number")
+  pucValidUntil  DateTime?        @map("puc_valid_until")
+  pucSource      String?          @map("puc_source") // DIGILOCKER, MANUAL
+  pucAddedAt     DateTime?        @map("puc_added_at")
   household      Household        @relation(fields: [householdId], references: [id], onDelete: Cascade)
   fuelLogs       FuelLog[]
   sale           MerchantSale?

@@ -253,6 +253,10 @@ export async function GET(
         year: v.year,
         source: v.source,
         registrationNo: v.registrationNo,
+        gpsDeviceId: v.gpsDeviceId,
+        pucNumber: v.pucNumber,
+        pucValidUntil: v.pucValidUntil,
+        pucSource: v.pucSource,
         registeredBy: shops.get(v.id) ?? null,
       })),
       solar: {

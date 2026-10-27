@@ -171,7 +171,7 @@ async function withCatalogue(merchant: Merchant, body: unknown): Promise<{ body:
           model: c.model,
           year: c.modelYear,
           kmPerUnit: c.kmPerUnit,
-          ...unit(["variant", "vin", "registrationNo", "invoiceRef", "purchasedOn"]),
+          ...unit(["variant", "vin", "registrationNo", "gpsDeviceId", "invoiceRef", "purchasedOn"]),
         };
   return { body: { kind: c.kind, ticket: b.ticket, item }, itemId: c.id, price: c.priceInr };
 }
@@ -248,6 +248,7 @@ export async function registerSale(merchant: Merchant, userId: string, rawBody: 
           model: v.model,
           vin: v.vin,
           registrationNo: v.registrationNo || null,
+          gpsDeviceId: v.gpsDeviceId ?? null,
           purchasedOn,
         },
       });

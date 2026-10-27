@@ -1,6 +1,14 @@
 package app.carbonwallet.ghar
 
 import androidx.compose.foundation.background
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,7 +33,6 @@ import app.carbonwallet.core.net.Session
 import app.carbonwallet.core.net.rememberRemote
 import app.carbonwallet.core.shell.Nav
 import app.carbonwallet.core.shell.memberRole
-import app.carbonwallet.core.ui.AllowanceMeter
 import app.carbonwallet.core.ui.Banner
 import app.carbonwallet.core.ui.BarRowData
 import app.carbonwallet.core.ui.BarRows
@@ -79,7 +86,7 @@ fun HomeTab(nav: Nav) = WithHome { home ->
     val updates = rememberRemote("/api/public/updates", PortalUpdates.serializer())
 
     RemoteList(remote, contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = 28.dp)) { o ->
-        item(key = "ticker") { Ticker(updates.data?.updates.orEmpty()) }
+        item(key = "ticker") { Ticker(updates.data?.updates.orEmpty(), Modifier.padding(start = 16.dp, end = 16.dp, top = 10.dp)) }
 
         item(key = "hello") {
             Column(Modifier.padding(horizontal = 16.dp).padding(top = 6.dp)) {
@@ -198,46 +205,69 @@ private fun Hero(o: Overview, kpi: Kpi, allowance: Allowance) {
     val used = kpi.totalEmissions
     val tone = statusFor(used, allowance.allowanceKg)
     val ratio = if (allowance.allowanceKg > 0) used / allowance.allowanceKg else 0.0
-    CwCard(Modifier.padding(horizontal = 16.dp), padding = 14.dp) {
+    val share = "${(ratio * 100).roundToInt()}%"
+    val soft = Color.White.copy(alpha = 0.82f)
+    // the month's carbon as a green "balance card": one big number, how much of the allowance it is, the trend
+    Column(
+        Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(Brush.linearGradient(listOf(Cw.govBlue, Cw.govDeep)))
+            .padding(18.dp),
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Eyebrow(o.period?.label ?: t("This month", "इस महीने"), Modifier.weight(1f))
+            Text(o.period?.label ?: t("This month", "इस महीने"), style = MaterialTheme.typography.labelLarge, color = soft, modifier = Modifier.weight(1f))
             StatusPill(tone, when (tone) {
                 Tone.GOOD -> t("Green", "हरा")
                 Tone.WARN -> t("Amber", "पीला")
                 else -> t("Red", "लाल")
             })
         }
-        Spacer(Modifier.height(12.dp))
-        AllowanceMeter(ratio, tone, Modifier.padding(horizontal = 56.dp)) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(kgNumber(used), style = MaterialTheme.typography.displayMedium)
-                Text(t("kg CO₂e this month", "किलो CO₂e इस महीने"), style = MaterialTheme.typography.labelMedium, color = Cw.inkMuted)
-            }
+        Spacer(Modifier.height(14.dp))
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(kgNumber(used), style = MaterialTheme.typography.displayMedium, color = Color.White)
+            Spacer(Modifier.width(8.dp))
+            Text(t("kg CO₂e this month", "किलो CO₂e इस महीने"), style = MaterialTheme.typography.labelMedium, color = soft, modifier = Modifier.padding(bottom = 6.dp))
         }
-        Spacer(Modifier.height(12.dp))
-        Text(statusWords(tone), style = MaterialTheme.typography.titleSmall, color = tone.fg, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(14.dp))
+        val bar = when (tone) {
+            Tone.GOOD -> Color(0xFF8EE3B8)
+            Tone.WARN -> Cw.saffron
+            else -> Color(0xFFFF8A75)
+        }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color.White.copy(alpha = 0.22f))
+                .semantics { contentDescription = "$share of the allowance used" },
+        ) {
+            Box(Modifier.fillMaxWidth(ratio.coerceIn(0.0, 1.0).toFloat()).fillMaxHeight().clip(RoundedCornerShape(50)).background(bar))
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(statusWords(tone), style = MaterialTheme.typography.titleSmall, color = Color.White)
         Text(
-            t("${(ratio * 100).roundToInt()}% of your home's allowance (${kg(allowance.allowanceKg)})", "आपके घर की सीमा (${kg(allowance.allowanceKg)}) का ${(ratio * 100).roundToInt()}%"),
+            t("$share of your home's allowance (${kg(allowance.allowanceKg)})", "आपके घर की सीमा (${kg(allowance.allowanceKg)}) का $share"),
             style = MaterialTheme.typography.bodySmall,
-            color = Cw.inkMuted,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
+            color = soft,
         )
         kpi.trendPct?.let { trend ->
             Spacer(Modifier.height(12.dp))
             val down = trend < 0
             Row(
-                Modifier.fillMaxWidth().background(if (down) Cw.successSoft else Cw.criticalSoft).padding(10.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.14f)).padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(if (down) Lucide.TrendDown else Lucide.TrendUp, null, tint = if (down) Cw.successText else Cw.criticalText, modifier = Modifier.size(18.dp))
+                Icon(if (down) Lucide.TrendDown else Lucide.TrendUp, null, tint = Color.White, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(
                     if (down) t("${pct(trend)} less than last month", "पिछले महीने से ${pct(trend)} कम")
                     else t("${pct(trend)} more than last month", "पिछले महीने से ${pct(trend)} ज़्यादा"),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = if (down) Cw.successText else Cw.criticalText,
+                    color = Color.White,
                 )
             }
         }

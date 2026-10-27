@@ -157,6 +157,7 @@ fun CardTab(nav: Nav) = WithHome { home ->
                         } else null,
                         trailing = if (v.id in pending) { { Tag(t("Removal asked", "हटाने का अनुरोध"), color = Cw.warningText, background = Cw.warningSoft) } } else null,
                     )
+                    PucLine(home, v)
                 }
             }
         }
@@ -211,7 +212,7 @@ private fun CarbonCard(pb: Passbook) {
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
                 Text("CARBON CARD · कार्बन कार्ड", color = Cw.saffron, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
-                Text(pb.household?.name ?: "", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontFamily = Fonts.newsreader))
+                Text(pb.household?.name ?: "", color = Color.White, style = MaterialTheme.typography.titleLarge.copy(fontFamily = Fonts.plexSans))
                 Text(listOfNotNull(pb.household?.city, pb.household?.state).joinToString(", "), color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.bodySmall)
             }
         }

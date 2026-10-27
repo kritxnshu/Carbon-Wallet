@@ -6,6 +6,7 @@ import { SectionHeading } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { CardScanner, type ScanStatus } from "@/components/card/CardScanner";
 import { SaleForm, type SalePayload } from "@/components/merchant/SaleForm";
+import { sellsAppliances, sellsVehicles } from "@/lib/merchant";
 import { CounterAdvice } from "@/components/merchant/CounterAdvice";
 import { CataloguePicker, type PickPayload } from "@/components/merchant/CataloguePicker";
 import { toast } from "sonner";
@@ -40,6 +41,8 @@ export function MerchantCounter({ shop, sells }: { shop: string; sells: string }
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [typing, setTyping] = useState(false); // typing the label by hand instead of picking from the catalogue
+  const [category, setCategory] = useState<"APPLIANCE" | "VEHICLE">(sellsAppliances(sells) ? "APPLIANCE" : "VEHICLE");
+  const allowed = category === "VEHICLE" ? sellsVehicles(sells) : sellsAppliances(sells);
   const busy = useRef(false);
   const left = useCountdown(scan?.expiresAt ?? null);
   const expired = !!scan && left === 0;
@@ -155,16 +158,32 @@ export function MerchantCounter({ shop, sells }: { shop: string; sells: string }
       {step === "item" && !expired && (
         <section>
           <SectionHeading index="03" title="What did they buy?" meta="From the star label, the box and the invoice" />
+          <label className="mt-5 flex max-w-xs flex-col gap-1">
+            <span className="label-caps">What are you registering?</span>
+            <select
+              className="h-10 rounded-sm border border-border bg-canvas-card px-3 text-sm text-ink focus:border-ink focus:outline-none"
+              value={category}
+              onChange={(e) => setCategory(e.target.value as "APPLIANCE" | "VEHICLE")}
+            >
+              <option value="APPLIANCE">Electrical appliance</option>
+              <option value="VEHICLE">Vehicle</option>
+            </select>
+          </label>
           <div className="mt-5">
-            {typing ? (
+            {!allowed ? (
+              <p className="border-l-2 border-warning-border bg-warning-subtle px-3 py-2 text-sm text-warning-text">
+                Your shop is registered for {category === "VEHICLE" ? "electrical appliances" : "vehicles"} only. Change &quot;What you sell&quot; to
+                both in your shop details, then register this item.
+              </p>
+            ) : typing ? (
               <>
-                <SaleForm sells={sells} busy={saving} onSubmit={register} />
+                <SaleForm key={category} category={category} busy={saving} onSubmit={register} />
                 <button onClick={() => setTyping(false)} className="mt-3 text-[13px] underline">
                   Pick from the catalogue instead
                 </button>
               </>
             ) : (
-              <CataloguePicker busy={saving} onSubmit={register} onTypeInstead={() => setTyping(true)} />
+              <CataloguePicker key={category} category={category} busy={saving} onSubmit={register} onTypeInstead={() => setTyping(true)} />
             )}
           </div>
           {error && <p className="mt-3 border-l-2 border-critical bg-critical-subtle px-3 py-2 text-sm text-critical-text">{error}</p>}

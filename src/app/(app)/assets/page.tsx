@@ -15,6 +15,7 @@ import { Pager, usePaged } from "@/components/ui/Pager";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CardItemsTabs } from "@/components/assets/CardItemsTabs";
 import { RemovalDialog, type RemovalTarget } from "@/components/assets/RemovalDialog";
+import { VehiclePuc, usePucReturnToast, type PucVehicle } from "@/components/assets/VehiclePuc";
 import { APPLIANCE_TYPES, RATINGS, VEHICLE_TYPES, labelOf } from "@/lib/assets";
 import type { LucideIcon } from "lucide-react";
 
@@ -25,7 +26,7 @@ const FUEL_UNIT: Record<string, string> = { Petrol: "L", Diesel: "L", CNG: "kg",
 // Registered by a shop at the counter (merchant.service.ts): the shop's specs are locked, usage stays the household's
 type RegisteredBy = { shop: string; city: string; at: string; product?: string | null; imageUrl?: string | null; priceInr?: number | null } | null;
 type Appliance = { id: string; name: string; type: string; rating: string; powerKw: number; avgHoursPerDay?: number; source?: string; registeredBy?: RegisteredBy };
-type Vehicle = { id: string; name: string; type: string; fuel: string; monthlyKm: number; kmPerUnit?: number; year?: number | null; source?: string; registeredBy?: RegisteredBy };
+type Vehicle = PucVehicle & { id: string; name: string; type: string; fuel: string; monthlyKm: number; kmPerUnit?: number; year?: number | null; source?: string; registeredBy?: RegisteredBy };
 type Removal = {
   id: string;
   kind: string;
@@ -68,6 +69,7 @@ export default function ItemsPage() {
   const qc = useQueryClient();
   const [removing, setRemoving] = useState<{ target: RemovalTarget; reason?: "NOT_OURS" } | null>(null);
   const [editing, setEditing] = useState<{ kind: "appliance" | "vehicle"; item: Appliance | Vehicle } | null>(null);
+  usePucReturnToast(t);
   const removals = useQuery<{ requests: Removal[] }>({
     queryKey: ["household", activeHouseholdId, "removals"],
     queryFn: async () => {
@@ -238,6 +240,7 @@ export default function ItemsPage() {
                 onEdit={() => setEditing({ kind: "vehicle", item: v })}
                 onRemove={() => ask("VEHICLE", v)}
                 t={t}
+                extra={<VehiclePuc householdId={activeHouseholdId!} vehicle={v} canAct={isOwner} demoRole={demoRole} onSaved={refresh} t={t} />}
               />
             );
           })}
@@ -320,6 +323,7 @@ function ItemCard({
   onEdit,
   onRemove,
   t,
+  extra,
 }: {
   Icon: LucideIcon;
   name: string;
@@ -333,6 +337,7 @@ function ItemCard({
   onEdit: () => void;
   onRemove: () => void;
   t: (en: string, hi: string) => string;
+  extra?: React.ReactNode;
 }) {
   return (
     <article className="flex flex-col border border-border bg-canvas-card">
@@ -361,6 +366,7 @@ function ItemCard({
         </div>
       </div>
       <p className="px-4 text-[13px] text-ink-muted">{facts.join(" · ")}</p>
+      {extra}
       {by && (
         <p className="mt-1 flex items-center gap-1.5 px-4 text-[12px] text-ink-muted">
           <Store className="h-3.5 w-3.5" /> {t("Added by", "जोड़ा")} {by.shop} · {shortDate(by.at)}

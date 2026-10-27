@@ -133,6 +133,14 @@ export const MerchantVehicleSchema = z.object({
     .toUpperCase()
     .regex(/^[A-HJ-NPR-Z0-9]{11,17}$/, "The chassis number (VIN) is 11–17 letters and digits, without I, O or Q"),
   registrationNo: z.string().trim().toUpperCase().max(15).nullish(),
+  // a GPS tracker or connected-car unit, often its 15-digit IMEI; optional
+  gpsDeviceId: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .regex(/^([A-Z0-9-]{6,32})?$/, "The GPS ID is 6–32 letters, digits or dashes (often the 15-digit IMEI)")
+    .transform((v) => v || null)
+    .nullish(),
   purchasedOn,
   invoiceRef,
 });
@@ -151,3 +159,19 @@ export const ITEMS_BY_SHOPS =
   "Items are added by the shop when you buy them: show your Carbon Card at the counter. For things you already own, any Carbon Wallet shop can register them from your card.";
 export const REMOVE_BY_REQUEST =
   "Items can't be deleted from here. Ask for removal with a photo and a short note; our team checks it and removes it.";
+
+/** A PUC (Pollution Under Control) certificate the family types in, when DigiLocker isn't used. */
+export const VehiclePucSchema = z.object({
+  pucNumber: z.string().trim().toUpperCase().min(4, "Enter the PUC certificate number").max(30),
+  validUntil: z.coerce.date({ message: "Enter the date the PUC is valid until" }),
+});
+
+export type PucState = "NOT_NEEDED" | "PENDING" | "VALID" | "EXPIRED";
+
+/** Electric vehicles need no PUC; for the rest it is pending until added, then valid or expired. */
+export function pucState(v: { fuel: string; pucNumber?: string | null; pucValidUntil?: Date | string | null }, now = new Date()): PucState {
+  if (v.fuel === "Electric") return "NOT_NEEDED";
+  if (!v.pucNumber) return "PENDING";
+  if (v.pucValidUntil && new Date(v.pucValidUntil).getTime() < now.getTime()) return "EXPIRED";
+  return "VALID";
+}

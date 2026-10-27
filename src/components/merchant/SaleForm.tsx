@@ -10,7 +10,6 @@ import {
   REFRIGERANTS,
   suggestedMileage,
 } from "@/lib/assets";
-import { sellsAppliances, sellsVehicles } from "@/lib/merchant";
 
 export type SaleKind = "AC" | "APPLIANCE" | "VEHICLE";
 export type SalePayload = { kind: "APPLIANCE" | "VEHICLE"; item: Record<string, unknown> };
@@ -31,11 +30,14 @@ function Field({ label, children, hint, className = "" }: { label: string; child
 }
 
 /** What the shop types in from the BEE star label, the invoice and the box. Usage is left to the household. */
-export function SaleForm({ sells, busy, onSubmit }: { sells: string; busy: boolean; onSubmit: (p: SalePayload) => void }) {
-  const kinds: [SaleKind, string][] = [
-    ...(sellsAppliances(sells) ? ([["AC", "Air conditioner"], ["APPLIANCE", "Other appliance"]] as [SaleKind, string][]) : []),
-    ...(sellsVehicles(sells) ? ([["VEHICLE", "Vehicle"]] as [SaleKind, string][]) : []),
-  ];
+export function SaleForm({ category, busy, onSubmit }: { category: "APPLIANCE" | "VEHICLE"; busy: boolean; onSubmit: (p: SalePayload) => void }) {
+  const kinds: [SaleKind, string][] =
+    category === "VEHICLE"
+      ? [["VEHICLE", "Vehicle"]]
+      : [
+          ["AC", "Air conditioner"],
+          ["APPLIANCE", "Other appliance"],
+        ];
   const [kind, setKind] = useState<SaleKind>(kinds[0][0]);
 
   return (
@@ -173,7 +175,7 @@ function ApplianceSale({ ac, busy, onSubmit }: { ac: boolean; busy: boolean; onS
         <input type="checkbox" checked={f.inverter} onChange={(e) => setF({ ...f, inverter: e.target.checked })} className="h-4 w-4 accent-ink" />
         Inverter
       </label>
-      <div className="sm:col-span-2 lg:col-span-4">
+      <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-4">
         <Button type="submit" disabled={busy}>
           {busy ? "Registering…" : "Register to this home"}
         </Button>
@@ -193,6 +195,7 @@ function VehicleSale({ busy, onSubmit }: { busy: boolean; onSubmit: (p: SalePayl
     kmPerUnit: "",
     vin: "",
     registrationNo: "",
+    gpsDeviceId: "",
     invoiceRef: "",
     purchasedOn: today(),
   });
@@ -217,6 +220,7 @@ function VehicleSale({ busy, onSubmit }: { busy: boolean; onSubmit: (p: SalePayl
             kmPerUnit: num(f.kmPerUnit),
             vin: f.vin,
             registrationNo: f.registrationNo || null,
+            gpsDeviceId: f.gpsDeviceId || null,
             invoiceRef: f.invoiceRef || undefined,
             purchasedOn: f.purchasedOn,
           },
@@ -258,16 +262,22 @@ function VehicleSale({ busy, onSubmit }: { busy: boolean; onSubmit: (p: SalePayl
       <Field label="Registration no. (optional)" hint="If the RTO has issued it already">
         <input className={`${inputCls} font-mono uppercase`} value={f.registrationNo} onChange={set("registrationNo")} maxLength={15} />
       </Field>
+      <Field label="GPS / tracker ID (optional)" hint="The GPS or connected-car unit, often its 15-digit IMEI">
+        <input className={`${inputCls} font-mono uppercase`} value={f.gpsDeviceId} onChange={set("gpsDeviceId")} maxLength={32} />
+      </Field>
       <Field label="Invoice no. (optional)">
         <input className={`${inputCls} font-mono`} value={f.invoiceRef} onChange={set("invoiceRef")} maxLength={40} />
       </Field>
       <Field label="Purchase date">
         <input className={inputCls} type="date" value={f.purchasedOn} max={today()} onChange={set("purchasedOn")} required />
       </Field>
-      <div className="sm:col-span-2 lg:col-span-4">
+      <div className="flex flex-wrap items-center gap-4 sm:col-span-2 lg:col-span-4">
         <Button type="submit" disabled={busy}>
           {busy ? "Registering…" : "Register to this home"}
         </Button>
+        {f.fuel !== "Electric" && (
+          <span className="text-[12px] text-ink-muted">No PUC needed now: the family adds it from DigiLocker once it&apos;s issued.</span>
+        )}
       </div>
     </form>
   );

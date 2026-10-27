@@ -18,7 +18,7 @@ const ADMIN = { name: "Platform Admin", email: "admin@carbonwallet.in", password
 // Demo shops: two approved (one per kind of goods) and one still waiting for an admin. Names are made up.
 export const SHOP_PASSWORD = "ShopDemo#2026";
 export const DEMO_SHOPS = [
-  { name: "Ravi Kumar", email: "counter@demo-appliances.example.com", businessName: "Demo Appliances", gstin: "09AAACD1234E1Z5", city: "Noida", state: "Uttar Pradesh", sells: "APPLIANCES", status: "APPROVED" },
+  { name: "Ravi Kumar", email: "counter@demo-appliances.example.com", businessName: "Demo Appliances", gstin: "09AAACD1234E1Z5", city: "Noida", state: "Uttar Pradesh", sells: "BOTH", status: "APPROVED" },
   { name: "Simran Kaur", email: "sales@demo-motors.example.com", businessName: "Demo Motors", gstin: "07AAACD5678F1Z2", city: "New Delhi", state: "Delhi", sells: "VEHICLES", status: "APPROVED" },
   { name: "Arif Shaikh", email: "owner@new-shop.example.com", businessName: "New Shop Electronics", gstin: null, city: "Pune", state: "Maharashtra", sells: "BOTH", status: "PENDING" },
 ] as const;

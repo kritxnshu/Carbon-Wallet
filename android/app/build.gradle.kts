@@ -77,8 +77,8 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Left empty when not set: the app then says the server isn't configured instead of calling a wrong host.
-            buildConfigField("String", "API_URL", quoted(setting("cw.releaseApiUrl") ?: ""))
+            // The live website (Vercel, Singapore, next to the database); cw.releaseApiUrl overrides it
+            buildConfigField("String", "API_URL", quoted(setting("cw.releaseApiUrl") ?: "https://carbon-wallet-india.vercel.app"))
             signingConfigs.findByName("release")?.let { signingConfig = it }
         }
     }

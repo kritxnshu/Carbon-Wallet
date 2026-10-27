@@ -113,7 +113,7 @@ fun ProfileScreen(flavor: FlavorSpec) {
 
 @Composable
 private fun <T> Choice(options: List<Pair<String, T>>, selected: T, onSelect: (T) -> Unit) {
-    Row(Modifier.fillMaxWidth().border(1.dp, Cw.border, RoundedCornerShape(3.dp))) {
+    Row(Modifier.fillMaxWidth().border(1.dp, Cw.border, RoundedCornerShape(12.dp))) {
         options.forEach { (label, value) ->
             val on = value == selected
             Box(

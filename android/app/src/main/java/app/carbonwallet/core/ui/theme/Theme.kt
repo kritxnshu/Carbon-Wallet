@@ -21,21 +21,21 @@ import app.carbonwallet.core.ui.Lang
 import app.carbonwallet.core.ui.LocalLang
 import app.carbonwallet.core.ui.UiPrefs
 
-/** "Carbon Ledger" tokens, copied from the website's tailwind.config.ts so both look the same. */
+/** The app's tokens: white cards on a soft green-grey ground, one deep green for actions, amber for highlights. */
 object Cw {
-    val ink = Color(0xFF1D1C18)
-    val inkMuted = Color(0xFF625D54)
-    val inkLight = Color(0xFF8F897D)
-    val canvas = Color(0xFFF4F1EA)
-    val card = Color(0xFFFBFAF7)
-    val subtle = Color(0xFFECE7DC)
-    val border = Color(0xFFDCD5C6)
-    val borderHover = Color(0xFFC4BBA8)
+    val ink = Color(0xFF15181D)
+    val inkMuted = Color(0xFF5D6470)
+    val inkLight = Color(0xFF8B919B)
+    val canvas = Color(0xFFF3F6F4)
+    val card = Color(0xFFFFFFFF)
+    val subtle = Color(0xFFEDF1EE)
+    val border = Color(0xFFE1E6E2)
+    val borderHover = Color(0xFFC9D1CB)
 
-    val terracotta = Color(0xFFB4532F)
-    val terracottaSoft = Color(0xFFF0D5C8)
-    val moss = Color(0xFF3F6B4E)
-    val mossSoft = Color(0xFFE3EADF)
+    val terracotta = Color(0xFFC2603A)
+    val terracottaSoft = Color(0xFFF8E4DA)
+    val moss = Color(0xFF1F7A55)
+    val mossSoft = Color(0xFFE3F2EA)
 
     val success = Color(0xFF3F6B4E)
     val successSoft = Color(0xFFE6ECE2)
@@ -50,13 +50,13 @@ object Cw {
     val criticalText = Color(0xFF7E2419)
     val criticalBorder = Color(0xFFE3B6AC)
 
-    // public-portal chrome: navy with saffron and India green accents
-    val govNavy = Color(0xFF12284C)
-    val govDeep = Color(0xFF0B1B36)
-    val govBlue = Color(0xFF1F4E8C)
-    val govSky = Color(0xFFE9EFF8)
-    val saffron = Color(0xFFF28C28)
-    val saffronSoft = Color(0xFFFDEBD9)
+    // brand: deep green for actions and headers, mint surfaces, amber highlights (names kept from the first design)
+    val govNavy = Color(0xFF0E6B4A)
+    val govDeep = Color(0xFF0A4F37)
+    val govBlue = Color(0xFF12805C)
+    val govSky = Color(0xFFE6F4EC)
+    val saffron = Color(0xFFF2A23A)
+    val saffronSoft = Color(0xFFFEF2E0)
     val indiaGreen = Color(0xFF138808)
     val tricolourSaffron = Color(0xFFFF9933)
 
@@ -100,8 +100,8 @@ object Fonts {
 
 private fun typography(lang: Lang): Typography {
     val body = if (lang == Lang.HI) Fonts.plexDeva else Fonts.plexSans
-    // Newsreader has no Devanagari, so Hindi headings use Plex Devanagari like the website does
-    val heading = if (lang == Lang.HI) Fonts.plexDeva else Fonts.newsreader
+    // one clean sans for everything: Plex Sans, or Plex Devanagari for Hindi
+    val heading = body
     fun s(family: FontFamily, size: Int, line: Int, weight: FontWeight, tracking: Double = 0.0) =
         // no colour here: text takes its colour from the surface it sits on (ink on paper, paper on buttons)
         TextStyle(fontFamily = family, fontSize = size.sp, lineHeight = line.sp, fontWeight = weight, letterSpacing = tracking.sp)
@@ -126,10 +126,10 @@ private fun typography(lang: Lang): Typography {
 }
 
 private val colors = lightColorScheme(
-    primary = Cw.ink,
-    onPrimary = Cw.card,
-    primaryContainer = Cw.subtle,
-    onPrimaryContainer = Cw.ink,
+    primary = Cw.govNavy,
+    onPrimary = Color.White,
+    primaryContainer = Cw.govSky,
+    onPrimaryContainer = Cw.govDeep,
     secondary = Cw.terracotta,
     onSecondary = Color.White,
     secondaryContainer = Cw.terracottaSoft,
@@ -159,13 +159,13 @@ private val colors = lightColorScheme(
     inverseOnSurface = Cw.card,
 )
 
-// Near-square corners, as on the website (2–4 px)
+// Soft, friendly corners
 private val shapes = Shapes(
-    extraSmall = RoundedCornerShape(2.dp),
-    small = RoundedCornerShape(2.dp),
-    medium = RoundedCornerShape(3.dp),
-    large = RoundedCornerShape(4.dp),
-    extraLarge = RoundedCornerShape(6.dp),
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(12.dp),
+    large = RoundedCornerShape(16.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 
 /** Text size A / A+ / A++, the same three steps as the website's utility bar. */

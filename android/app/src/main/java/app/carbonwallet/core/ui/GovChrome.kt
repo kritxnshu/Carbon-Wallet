@@ -1,8 +1,5 @@
 package app.carbonwallet.core.ui
 
-import android.graphics.Paint
-import android.graphics.Path as AndroidPath
-import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -37,18 +34,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -67,54 +61,29 @@ fun Tricolour(modifier: Modifier = Modifier, height: Dp = 3.dp) {
     }
 }
 
-/**
- * Carbon Wallet's own round seal (a home with a leaf in a ring of bilingual text), drawn from the website's Seal.tsx.
- * Deliberately not the State Emblem: this is a citizen service and must not pretend to be the government.
- */
+/** Carbon Wallet's app mark: a white home with a mint leaf on a deep-green rounded square. */
 @Composable
-fun Seal(size: Dp, modifier: Modifier = Modifier, withText: Boolean = true) {
-    Canvas(modifier.size(size).semantics { contentDescription = "Carbon Wallet seal" }) {
+fun Seal(size: Dp, modifier: Modifier = Modifier, @Suppress("UNUSED_PARAMETER") withText: Boolean = true) {
+    Canvas(modifier.size(size).semantics { contentDescription = "Carbon Wallet" }) {
         val k = this.size.width / 120f
         scale(k, k, pivot = Offset.Zero) {
-            drawCircle(Cw.govNavy, 58f, Offset(60f, 60f))
-            drawCircle(Cw.saffron, 52f, Offset(60f, 60f), style = Stroke(1.5f))
-            drawCircle(Cw.card, 33f, Offset(60f, 60f))
+            drawRoundRect(Cw.govNavy, cornerRadius = CornerRadius(32f, 32f), size = Size(120f, 120f))
             val house = Path().apply {
-                moveTo(44f, 62f); lineTo(60f, 48f); lineTo(76f, 62f); lineTo(76f, 77f); lineTo(44f, 77f); close()
+                moveTo(30f, 66f); lineTo(60f, 40f); lineTo(90f, 66f); lineTo(90f, 92f); lineTo(30f, 92f); close()
             }
-            drawPath(house, Cw.govNavy)
-            drawRect(Cw.card, Offset(55f, 66f), androidx.compose.ui.geometry.Size(10f, 11f))
+            drawPath(house, Color.White)
+            drawRect(Cw.govNavy, Offset(53f, 72f), Size(14f, 20f))
             val leaf = Path().apply {
-                moveTo(60f, 50f); cubicTo(66f, 38f, 79f, 36f, 82f, 34f); cubicTo(80f, 46f, 72f, 54f, 60f, 50f); close()
+                moveTo(64f, 44f); cubicTo(72f, 28f, 90f, 24f, 97f, 21f); cubicTo(95f, 38f, 82f, 51f, 64f, 44f); close()
             }
-            drawPath(leaf, Cw.indiaGreen)
-            val vein = Path().apply { moveTo(61f, 49.5f); cubicTo(68f, 44f, 74f, 40f, 81f, 35f) }
-            drawPath(vein, Cw.card, style = Stroke(1f))
-            drawCircle(Cw.saffron, 2.2f, Offset(21f, 60f))
-            drawCircle(Cw.saffron, 2.2f, Offset(99f, 60f))
-            if (withText) {
-                val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    color = Cw.card.toArgb()
-                    textAlign = Paint.Align.CENTER
-                    typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                }
-                val top = AndroidPath().apply { addArc(18f, 18f, 102f, 102f, 180f, 180f) }
-                paint.textSize = 10.5f
-                paint.letterSpacing = 0.2f
-                drawContext.canvas.nativeCanvas.drawTextOnPath("CARBON WALLET", top, 0f, 3.5f, paint)
-                val bottom = AndroidPath().apply { addArc(22f, 22f, 98f, 98f, 180f, -180f) }
-                paint.textSize = 10f
-                paint.letterSpacing = 0.05f
-                drawContext.canvas.nativeCanvas.drawTextOnPath("कार्बन वॉलेट", bottom, 0f, 9f, paint)
-            }
+            drawPath(leaf, Color(0xFF8EE3B8))
         }
     }
 }
 
 /**
- * The portal header, sized for a phone:
- *  1. tricolour hairline and the dark utility bar with text size (A / A+ / A++) and language, as GIGW asks;
- *  2. the white masthead: seal, the name in Hindi and English, which service this app is, and actions.
+ * The top bar: the app mark and name, which app this is, then text size (Aa) and language, then the screen's
+ * actions. Text size and language stay one tap away on every screen.
  */
 @Composable
 fun GovHeader(
@@ -123,72 +92,56 @@ fun GovHeader(
     modifier: Modifier = Modifier,
     actions: @Composable () -> Unit = {},
 ) {
-    Column(modifier.fillMaxWidth().background(Cw.govDeep).windowInsetsPadding(WindowInsets.statusBars)) {
-        Tricolour()
-        UtilityBar()
+    Column(modifier.fillMaxWidth().background(Cw.card).windowInsetsPadding(WindowInsets.statusBars)) {
         Row(
-            Modifier
-                .fillMaxWidth()
-                .background(Color.White)
-                .padding(start = 12.dp, end = 4.dp, top = 5.dp, bottom = 5.dp),
+            Modifier.fillMaxWidth().padding(start = 14.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Seal(34.dp, withText = false)
-            Spacer(Modifier.width(8.dp))
+            Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text("कार्बन वॉलेट", style = MaterialTheme.typography.titleSmall.copy(fontFamily = app.carbonwallet.core.ui.theme.Fonts.plexDeva), color = Cw.govNavy, maxLines = 1)
-                    Text(
-                        "  Carbon Wallet",
-                        style = MaterialTheme.typography.titleSmall.copy(fontFamily = app.carbonwallet.core.ui.theme.Fonts.newsreader),
-                        color = Cw.govNavy,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
+                Text("Carbon Wallet", style = MaterialTheme.typography.titleMedium, color = Cw.ink, maxLines = 1)
                 Text(t(serviceEn, serviceHi), style = MaterialTheme.typography.labelSmall, color = Cw.inkMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
+            TextSizeButton()
+            LanguageToggle(light = false)
             actions()
         }
-        Box(Modifier.fillMaxWidth().height(2.dp).background(Cw.saffron))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(Cw.border))
     }
 }
 
+/** Text size and language on their own, for screens without the top bar (sign-in). */
 @Composable
 fun UtilityBar() {
     Row(
-        Modifier.fillMaxWidth().height(28.dp).padding(horizontal = 12.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            t("Citizen Carbon Service", "नागरिक कार्बन सेवा"),
-            color = Color.White.copy(alpha = 0.8f),
-            style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        val sizes = listOf("A" to t("Normal text", "सामान्य अक्षर"), "A+" to t("Larger text", "बड़े अक्षर"), "A++" to t("Largest text", "सबसे बड़े अक्षर"))
-        sizes.forEachIndexed { i, (label, name) ->
-            val on = UiPrefs.textSize == i
-            Box(
-                Modifier
-                    .heightIn(min = 22.dp)
-                    .background(if (on) Color.White else Color.Transparent, RoundedCornerShape(1.dp))
-                    .clickable { UiPrefs.updateTextSize(i) }
-                    .semantics {
-                        role = Role.Tab
-                        selected = on
-                        contentDescription = name
-                    }
-                    .padding(horizontal = 7.dp, vertical = 3.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(label, color = if (on) Cw.govDeep else Color.White.copy(alpha = 0.85f), fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            }
+        TextSizeButton()
+        LanguageToggle(light = false)
+    }
+}
+
+/** "Aa": each tap steps the text size Normal → Larger → Largest, the same three steps as the website. */
+@Composable
+fun TextSizeButton() {
+    val names = listOf(t("Text size: normal", "अक्षर: सामान्य"), t("Text size: larger", "अक्षर: बड़े"), t("Text size: largest", "अक्षर: सबसे बड़े"))
+    val step = UiPrefs.textSize
+    Box(
+        Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .clickable { UiPrefs.updateTextSize((step + 1) % 3) }
+            .semantics { contentDescription = names[step] },
+        contentAlignment = Alignment.Center,
+    ) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text("A", color = Cw.ink, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Text("a", color = Cw.ink, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+            if (step > 0) Text("+".repeat(step), color = Cw.govNavy, fontSize = 10.sp, fontWeight = FontWeight.Bold)
         }
-        Box(Modifier.padding(horizontal = 8.dp).width(1.dp).height(14.dp).background(Color.White.copy(alpha = 0.3f)))
-        LanguageToggle()
     }
 }
 
@@ -198,15 +151,17 @@ fun LanguageToggle(light: Boolean = true) {
     val fg = if (light) Color.White else Cw.ink
     Row(
         Modifier
-            .border(1.dp, fg.copy(alpha = 0.4f), RoundedCornerShape(2.dp))
+            .padding(horizontal = 2.dp)
+            .clip(CircleShape)
+            .border(1.dp, fg.copy(alpha = 0.25f), CircleShape)
             .clickable { UiPrefs.updateLang(if (hi) Lang.EN else Lang.HI) }
             .semantics { contentDescription = if (hi) "Switch to English" else "हिंदी में देखें" }
-            .padding(horizontal = 8.dp, vertical = 3.dp),
+            .padding(horizontal = 10.dp, vertical = 5.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Lucide.Languages, null, tint = fg, modifier = Modifier.size(13.dp))
         Spacer(Modifier.width(5.dp))
-        Text(if (hi) "English" else "हिंदी", color = fg, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+        Text(if (hi) "EN" else "हिं", color = fg, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1)
     }
 }
 
@@ -215,16 +170,17 @@ fun HeaderIcon(icon: ImageVector, description: String, onClick: () -> Unit, badg
     Box(
         Modifier
             .size(40.dp)
+            .clip(CircleShape)
             .clickable(onClick = onClick)
             .semantics { contentDescription = if (badge > 0) "$description ($badge)" else description },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, tint = Cw.govNavy, modifier = Modifier.size(20.dp))
+        Icon(icon, null, tint = Cw.ink, modifier = Modifier.size(20.dp))
         if (badge > 0) {
             Box(
                 Modifier
                     .align(Alignment.TopEnd)
-                    .padding(top = 7.dp, end = 6.dp)
+                    .padding(top = 6.dp, end = 5.dp)
                     .heightIn(min = 16.dp)
                     .background(Cw.critical, CircleShape)
                     .padding(horizontal = 4.dp),
@@ -236,7 +192,7 @@ fun HeaderIcon(icon: ImageVector, description: String, onClick: () -> Unit, badg
     }
 }
 
-/** "What's new" strip, as on public portals. Moving text can be paused, as accessibility rules ask. */
+/** "What's new" as a soft rounded strip. Moving text can be paused, as accessibility rules ask. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Ticker(updates: List<PortalUpdate>, modifier: Modifier = Modifier, onOpen: (PortalUpdate) -> Unit = {}) {
@@ -244,17 +200,20 @@ fun Ticker(updates: List<PortalUpdate>, modifier: Modifier = Modifier, onOpen: (
     var paused by remember { mutableStateOf(false) }
     val lang = UiPrefs.lang
     Row(
-        modifier.fillMaxWidth().height(32.dp).background(Cw.govSky).border(1.dp, Cw.govNavy.copy(alpha = 0.12f)),
+        modifier.fillMaxWidth().height(38.dp).clip(RoundedCornerShape(12.dp)).background(Cw.govSky),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.fillMaxHeight().background(Cw.saffron).padding(horizontal = 10.dp), contentAlignment = Alignment.Center) {
-            Text(t("What's new", "नया क्या है"), color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
+        Box(
+            Modifier.padding(start = 8.dp).background(Cw.govNavy, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 3.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(t("New", "नया"), color = Color.White, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
         }
-        val line = updates.joinToString("     ◆     ") { lang.pick(it.en, it.hi) }
+        val line = updates.joinToString("     •     ") { lang.pick(it.en, it.hi) }
         Box(Modifier.weight(1f).fillMaxHeight().clickable { onOpen(updates.first()) }, contentAlignment = Alignment.CenterStart) {
             Text(
                 line,
-                color = Cw.govNavy,
+                color = Cw.govDeep,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1,
                 modifier = Modifier
@@ -264,8 +223,7 @@ fun Ticker(updates: List<PortalUpdate>, modifier: Modifier = Modifier, onOpen: (
         }
         Box(
             Modifier
-                .size(32.dp)
-                .border(1.dp, Cw.govNavy.copy(alpha = 0.12f))
+                .size(38.dp)
                 .clickable { paused = !paused }
                 .semantics { contentDescription = if (paused) "Play updates" else "Pause updates" },
             contentAlignment = Alignment.Center,
@@ -275,15 +233,12 @@ fun Ticker(updates: List<PortalUpdate>, modifier: Modifier = Modifier, onOpen: (
     }
 }
 
-/** A navy section band with a saffron rule, used for portal-style page titles. */
+/** A page title with an optional line under it. */
 @Composable
 fun PortalBand(title: String, subtitle: String? = null, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth()) {
-        Column(Modifier.fillMaxWidth().background(Cw.govNavy).padding(horizontal = 14.dp, vertical = 9.dp)) {
-            Text(title, color = Color.White, style = MaterialTheme.typography.titleLarge)
-            if (subtitle != null) Text(subtitle, color = Color.White.copy(alpha = 0.78f), style = MaterialTheme.typography.bodySmall)
-        }
-        Box(Modifier.fillMaxWidth().height(2.dp).background(Cw.saffron))
+    Column(modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+        Text(title, color = Cw.ink, style = MaterialTheme.typography.headlineSmall)
+        if (subtitle != null) Text(subtitle, color = Cw.inkMuted, style = MaterialTheme.typography.bodySmall)
     }
 }
 

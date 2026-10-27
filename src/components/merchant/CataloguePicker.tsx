@@ -17,22 +17,35 @@ const today = () => new Date().toLocaleDateString("en-CA");
  * The counter's fast path: pick the product from the shop's catalogue, then type only what's unique to this unit
  * (serial or chassis number, invoice). The customer sees running cost and carbon before the bill is made.
  */
-export function CataloguePicker({ busy, onSubmit, onTypeInstead }: { busy: boolean; onSubmit: (p: PickPayload) => void; onTypeInstead: () => void }) {
+export function CataloguePicker({
+  category,
+  busy,
+  onSubmit,
+  onTypeInstead,
+}: {
+  category: "APPLIANCE" | "VEHICLE";
+  busy: boolean;
+  onSubmit: (p: PickPayload) => void;
+  onTypeInstead: () => void;
+}) {
   const { t } = useUiPrefs();
   const [q, setQ] = useState("");
   const [picked, setPicked] = useState<CatalogueItemView | null>(null);
-  const [unit, setUnit] = useState({ serialNo: "", vin: "", registrationNo: "", invoiceRef: "", purchasedOn: today() });
+  const [unit, setUnit] = useState({ serialNo: "", vin: "", registrationNo: "", gpsDeviceId: "", invoiceRef: "", purchasedOn: today() });
   const { data, isLoading } = useQuery<{ items: CatalogueItemView[] }>({
     queryKey: ["merchant", "catalogue", "active"],
     queryFn: async () => (await fetch("/api/merchant/catalogue?active=1")).json(),
   });
-  const items = useMemo(() => (data?.items ?? []).filter((i) => !q || `${i.title} ${i.sku} ${i.brand} ${i.model}`.toLowerCase().includes(q.toLowerCase())), [data, q]);
+  const ofKind = useMemo(() => (data?.items ?? []).filter((i) => i.kind === category), [data, category]);
+  const items = useMemo(() => ofKind.filter((i) => !q || `${i.title} ${i.sku} ${i.brand} ${i.model}`.toLowerCase().includes(q.toLowerCase())), [ofKind, q]);
 
   if (isLoading) return <div className="h-40 animate-pulse bg-canvas-subtle" />;
-  if (!data?.items.length) {
+  if (!ofKind.length) {
     return (
       <div className="border border-border bg-canvas-card p-5 text-[14px]">
-        {t("Your catalogue is empty. Upload it once from the Catalogue page, or type the item in.", "आपका कैटलॉग ख़ाली है। कैटलॉग पेज से अपलोड करें, या सामान टाइप करें।")}{" "}
+        {category === "VEHICLE"
+          ? t("No vehicles in your catalogue yet. Add them from the Catalogue page, or type this one in.", "कैटलॉग में अभी कोई गाड़ी नहीं। कैटलॉग पेज से जोड़ें, या यह गाड़ी टाइप करें।")
+          : t("No appliances in your catalogue yet. Upload them from the Catalogue page, or type this one in.", "कैटलॉग में अभी कोई उपकरण नहीं। कैटलॉग पेज से अपलोड करें, या यह सामान टाइप करें।")}{" "}
         <button onClick={onTypeInstead} className="font-semibold underline">{t("Type it in", "टाइप करें")}</button>
       </div>
     );
@@ -49,7 +62,7 @@ export function CataloguePicker({ busy, onSubmit, onTypeInstead }: { busy: boole
             kind: picked.kind as "APPLIANCE" | "VEHICLE",
             catalogueItemId: picked.id,
             item: vehicle
-              ? { vin: unit.vin, registrationNo: unit.registrationNo || null, invoiceRef: unit.invoiceRef || undefined, purchasedOn: unit.purchasedOn }
+              ? { vin: unit.vin, registrationNo: unit.registrationNo || null, gpsDeviceId: unit.gpsDeviceId || null, invoiceRef: unit.invoiceRef || undefined, purchasedOn: unit.purchasedOn }
               : { serialNo: unit.serialNo, invoiceRef: unit.invoiceRef || undefined, purchasedOn: unit.purchasedOn },
           });
         }}
@@ -82,6 +95,15 @@ export function CataloguePicker({ busy, onSubmit, onTypeInstead }: { busy: boole
                 <span className="label-caps">{t("Registration no. (if issued)", "रजिस्ट्रेशन नंबर (अगर है)")}</span>
                 <input className={`${inputCls} font-mono uppercase`} value={unit.registrationNo} onChange={(e) => setUnit({ ...unit, registrationNo: e.target.value })} maxLength={15} />
               </label>
+              <label className="flex flex-col gap-1">
+                <span className="label-caps">{t("GPS / tracker ID (optional)", "GPS / ट्रैकर ID (वैकल्पिक)")}</span>
+                <input className={`${inputCls} font-mono uppercase`} value={unit.gpsDeviceId} onChange={(e) => setUnit({ ...unit, gpsDeviceId: e.target.value })} maxLength={32} placeholder={t("e.g. the 15-digit IMEI", "जैसे 15 अंकों का IMEI")} />
+              </label>
+              {picked.fuel !== "Electric" && (
+                <p className="text-[12px] text-ink-muted">
+                  {t("No PUC needed now: the family adds it from DigiLocker once it's issued.", "अभी PUC नहीं चाहिए: बनने के बाद परिवार इसे DigiLocker से जोड़ेगा।")}
+                </p>
+              )}
             </>
           ) : (
             <label className="flex flex-col gap-1">
