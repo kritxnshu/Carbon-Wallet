@@ -1,0 +1,25 @@
+# Only the website deploys to Vercel. The engine runs on Render, the apps are built locally,
+# and local secrets, databases and signing keys must never be uploaded.
+# Root-anchored (leading /) so src/server/storage and similar folders are kept.
+/android/
+/backend/
+/contracts/
+/card/
+/Docs/
+/tests/
+/storage/
+/coverage/
+/node_modules/
+/.next/
+/.next-*/
+.env
+.env.*
+!.env.example
+/prisma/dev.db
+/prisma/*.db-journal
+*.jks
+keystore.properties
+local.properties
+/tsconfig.tsbuildinfo
+/prisma/postgres/client/
+/prisma/test.db
